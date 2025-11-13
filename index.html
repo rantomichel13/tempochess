@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-<title>TempoChess ♞</title>
+<title>ChessMate ♞</title>
 <style>
   :root {
     --bg: #0a0a0a;
@@ -159,6 +159,47 @@
   .btn-primary:active {
     transform: scale(0.96);
     opacity: 0.9;
+  }
+
+  /* --- Écran de rotation --- */
+  .rotation-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    padding: 2rem;
+    gap: 2rem;
+  }
+
+  .rotation-screen h2 {
+    font-size: 1.3rem;
+    font-weight: 500;
+    text-align: center;
+    color: var(--text-secondary);
+  }
+
+  .rotation-icon {
+    width: 180px;
+    height: 180px;
+  }
+
+  .skip-rotation {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    color: var(--text-primary);
+    padding: 0.8rem 1.5rem;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .skip-rotation:active {
+    transform: scale(0.96);
+    background: var(--accent);
+    border-color: var(--accent);
   }
 
   /* --- Pendule en paysage --- */
@@ -357,7 +398,7 @@
 <!-- Menu -->
 <div id="menu" class="menu">
   <div class="menu-header">
-    <h1>♞ TempoChess</h1>
+    <h1>♞ ChessMate</h1>
     <div class="by">by Ranto</div>
     <p>Choisissez votre cadence</p>
   </div>
@@ -384,6 +425,25 @@
     </div>
     <button class="btn-primary" id="startCustom">Démarrer</button>
   </div>
+</div>
+
+<!-- Écran de rotation -->
+<div id="rotationScreen" class="rotation-screen hidden">
+  <h2>Tournez votre téléphone<br>en mode paysage vers la droite</h2>
+  
+  <svg class="rotation-icon" viewBox="0 0 240 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- Téléphone vertical (gauche) -->
+    <rect x="30" y="15" width="55" height="90" rx="6" stroke="#888888" stroke-width="3" fill="#1a1a1a"/>
+    <line x1="47" y1="22" x2="68" y2="22" stroke="#888888" stroke-width="2.5" stroke-linecap="round"/>
+    <circle cx="57.5" cy="98" r="5" fill="#888888"/>
+    
+    <!-- Téléphone horizontal tourné à droite -->
+    <rect x="145" y="35" width="90" height="55" rx="6" stroke="#4a9eff" stroke-width="3" fill="#1a1a1a"/>
+    <line x1="230" y1="52" x2="230" y2="73" stroke="#4a9eff" stroke-width="2.5" stroke-linecap="round"/>
+    <circle cx="153" cy="62.5" r="5" fill="#4a9eff"/>
+  </svg>
+  
+  <button class="skip-rotation" id="skipRotation">Passer</button>
 </div>
 
 <!-- Jeu -->
@@ -434,6 +494,7 @@ let halfMoves = 0;
 
 // Éléments DOM
 const menu = document.getElementById('menu');
+const rotationScreen = document.getElementById('rotationScreen');
 const game = document.getElementById('game');
 const leftZone = document.getElementById('leftZone');
 const rightZone = document.getElementById('rightZone');
@@ -548,11 +609,6 @@ document.getElementById('resetBtn').addEventListener('click', () => {
 });
 
 document.getElementById('homeBtn').addEventListener('click', () => {
-  // Déverrouiller l'orientation en revenant au menu
-  if (screen.orientation && screen.orientation.unlock) {
-    screen.orientation.unlock();
-  }
-  
   game.classList.add('hidden');
   menu.classList.remove('hidden');
   running = false;
@@ -578,7 +634,7 @@ document.querySelectorAll('.time-option:not(#customBtn)').forEach(opt => {
   opt.addEventListener('click', () => {
     baseTime = parseInt(opt.dataset.min) * 60 * 1000;
     increment = parseInt(opt.dataset.inc) * 1000;
-    startGame();
+    showRotationScreen();
   });
 });
 
@@ -591,28 +647,28 @@ document.getElementById('startCustom').addEventListener('click', () => {
   const inc = parseInt(document.getElementById('customInc').value);
   baseTime = t * 60 * 1000;
   increment = inc * 1000;
+  showRotationScreen();
+});
+
+// Afficher l'écran de rotation
+function showRotationScreen() {
+  menu.classList.add('hidden');
+  rotationScreen.classList.remove('hidden');
+}
+
+// Passer l'écran de rotation
+document.getElementById('skipRotation').addEventListener('click', () => {
   startGame();
 });
 
-async function startGame() {
+function startGame() {
   leftMs = rightMs = baseTime;
   active = null;
   running = false;
   moveCount = 0;
   halfMoves = 0;
   moveCountEl.textContent = '0';
-  
-  // Forcer l'orientation paysage et passer directement au jeu
-  try {
-    if (screen.orientation && screen.orientation.lock) {
-      await screen.orientation.lock('landscape');
-    }
-  } catch (err) {
-    console.log("Impossible de verrouiller l'orientation:", err);
-  }
-  
-  // Passer au jeu dans tous les cas
-  menu.classList.add('hidden');
+  rotationScreen.classList.add('hidden');
   game.classList.remove('hidden');
   updateDisplay();
 }
