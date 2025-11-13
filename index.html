@@ -161,90 +161,6 @@
     opacity: 0.9;
   }
 
-  /* --- Écran d'orientation --- */
-  .orientation-screen {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100vh;
-    padding: 2rem;
-    gap: 2rem;
-    text-align: center;
-  }
-
-  .phone-icon {
-    position: relative;
-    width: 120px;
-    height: 200px;
-    background: var(--surface);
-    border: 3px solid var(--border);
-    border-radius: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    animation: rotatePrompt 2s ease-in-out infinite;
-  }
-
-  @keyframes rotatePrompt {
-    0%, 100% { transform: rotate(0deg); }
-    50% { transform: rotate(90deg); }
-  }
-
-  .phone-icon::before {
-    content: '';
-    position: absolute;
-    top: 15px;
-    width: 40px;
-    height: 8px;
-    background: var(--border);
-    border-radius: 4px;
-  }
-
-  .phone-icon::after {
-    content: '';
-    position: absolute;
-    bottom: 15px;
-    width: 40px;
-    height: 40px;
-    background: var(--border);
-    border-radius: 50%;
-  }
-
-  .arrow-rotate {
-    font-size: 4rem;
-    color: var(--accent);
-    animation: pulse 1.5s ease-in-out infinite;
-  }
-
-  @keyframes pulse {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.6; transform: scale(1.1); }
-  }
-
-  .orientation-text {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-
-  .orientation-text h2 {
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: var(--text-primary);
-  }
-
-  .orientation-text p {
-    font-size: 1rem;
-    color: var(--text-secondary);
-  }
-
-  .orientation-text .highlight {
-    color: var(--accent);
-    font-weight: 600;
-    font-size: 1.2rem;
-  }
-
   /* --- Pendule en paysage --- */
   .game {
     display: flex;
@@ -470,23 +386,6 @@
   </div>
 </div>
 
-<!-- Écran d'orientation -->
-<div id="orientationScreen" class="orientation-screen hidden">
-  <div class="phone-icon">
-    <div style="font-size: 2rem;">📱</div>
-  </div>
-  
-  <div class="arrow-rotate">→</div>
-  
-  <div class="orientation-text">
-    <h2>Tournez votre téléphone</h2>
-    <p class="highlight">→ Vers la DROITE →</p>
-    <p>Mode paysage requis pour jouer</p>
-  </div>
-  
-  <button class="btn-primary" id="continueBtn" style="max-width: 300px;">J'ai tourné mon téléphone</button>
-</div>
-
 <!-- Jeu -->
 <div id="game" class="game hidden">
   <div class="move-counter">
@@ -535,7 +434,6 @@ let halfMoves = 0;
 
 // Éléments DOM
 const menu = document.getElementById('menu');
-const orientationScreen = document.getElementById('orientationScreen');
 const game = document.getElementById('game');
 const leftZone = document.getElementById('leftZone');
 const rightZone = document.getElementById('rightZone');
@@ -650,17 +548,16 @@ document.getElementById('resetBtn').addEventListener('click', () => {
 });
 
 document.getElementById('homeBtn').addEventListener('click', () => {
+  // Déverrouiller l'orientation en revenant au menu
+  if (screen.orientation && screen.orientation.unlock) {
+    screen.orientation.unlock();
+  }
+  
   game.classList.add('hidden');
   menu.classList.remove('hidden');
   running = false;
   active = null;
   document.getElementById('customSection').classList.add('hidden');
-});
-
-// Bouton continuer depuis l'écran d'orientation
-document.getElementById('continueBtn').addEventListener('click', () => {
-  orientationScreen.classList.add('hidden');
-  game.classList.remove('hidden');
 });
 
 // Zones cliquables
@@ -697,15 +594,26 @@ document.getElementById('startCustom').addEventListener('click', () => {
   startGame();
 });
 
-function startGame() {
+async function startGame() {
   leftMs = rightMs = baseTime;
   active = null;
   running = false;
   moveCount = 0;
   halfMoves = 0;
   moveCountEl.textContent = '0';
+  
+  // Forcer l'orientation paysage et passer directement au jeu
+  try {
+    if (screen.orientation && screen.orientation.lock) {
+      await screen.orientation.lock('landscape');
+    }
+  } catch (err) {
+    console.log("Impossible de verrouiller l'orientation:", err);
+  }
+  
+  // Passer au jeu dans tous les cas
   menu.classList.add('hidden');
-  orientationScreen.classList.remove('hidden');
+  game.classList.remove('hidden');
   updateDisplay();
 }
 
