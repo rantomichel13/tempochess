@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="theme-color" content="#0a0a0a" />
+<title>TempoChess ♞</title>
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --surface: #1a1a1a;
+    --border: #2a2a2a;
+    --text-primary: #ffffff;
+    --text-secondary: #888888;
+    --accent: #4a9eff;
+    --success: #00c853;
+    --warning: #ff6b35;
+  }
+
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html, body {
+    height: 100%;
+    width: 100%;
+    background: var(--bg);
+    color: var(--text-primary);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif;
+    user-select: none;
+    overflow: hidden;
+    position: fixed;
+  }
+
+  /* --- Menu --- */
+  .menu {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    padding: 2rem;
+    gap: 1.5rem;
+  }
+
+  .menu-header {
+    text-align: center;
+    margin-bottom: 1rem;
+  }
+
+  .menu-header h1 {
+    font-size: 1.8rem;
+    font-weight: 600;
+    letter-spacing: -0.5px;
+    margin-bottom: 0.3rem;
+  }
+
+  .menu-header .by {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    font-style: italic;
+    font-weight: 400;
+    margin-bottom: 0.5rem;
+  }
+
+  .menu-header p {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    font-weight: 400;
+  }
+
+  .time-options {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    width: 100%;
+    max-width: 400px;
+  }
+
+  .time-option {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    color: var(--text-primary);
+    padding: 1.2rem;
+    border-radius: 16px;
+    font-size: 1.1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+  }
+
+  .time-option:active {
+    transform: scale(0.96);
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+
+  .custom-section {
+    width: 100%;
+    max-width: 400px;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 16px;
+    padding: 1.5rem;
+    margin-top: 0.5rem;
+  }
+
+  .custom-section.hidden {
+    display: none;
+  }
+
+  .input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .input-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .input-row label {
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+  }
+
+  .input-row input {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    border-radius: 8px;
+    padding: 0.5rem 0.8rem;
+    width: 80px;
+    text-align: center;
+    font-size: 1rem;
+  }
+
+  .btn-primary {
+    width: 100%;
+    background: var(--accent);
+    border: none;
+    color: white;
+    padding: 0.9rem;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-primary:active {
+    transform: scale(0.96);
+    opacity: 0.9;
+  }
+
+  /* --- Écran de rotation --- */
+  .rotation-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    padding: 2rem;
+    gap: 2rem;
+  }
+
+  .rotation-screen h2 {
+    font-size: 1.3rem;
+    font-weight: 500;
+    text-align: center;
+    color: var(--text-secondary);
+  }
+
+  .rotation-icon {
+    width: 180px;
+    height: 180px;
+  }
+
+  @keyframes phoneRotate {
+    0% {
+      transform: rotate(0deg);
+    }
+    25% {
+      transform: rotate(-90deg);
+    }
+    50% {
+      transform: rotate(0deg);
+    }
+    75% {
+      transform: rotate(90deg);
+    }
+    100% {
+      transform: rotate(0deg);
+    }
+  }
+
+  .phone-animated {
+    animation: phoneRotate 4s ease-in-out infinite;
+    transform-origin: center center;
+  }
+
+  .skip-rotation {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    color: var(--text-primary);
+    padding: 0.8rem 1.5rem;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .skip-rotation:active {
+    transform: scale(0.96);
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+
+  /* --- Pendule en paysage --- */
+  .game {
+    display: flex;
+    height: 100vh;
+    width: 100vw;
+  }
+
+  .hidden {
+    display: none !important;
+  }
+
+  .player-zone {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    background: var(--surface);
+    border: 2px solid var(--border);
+    transition: all 0.15s ease;
+    cursor: pointer;
+  }
+
+  .player-zone.left {
+    border-right: 1px solid var(--border);
+  }
+
+  .player-zone.right {
+    border-left: 1px solid var(--border);
+  }
+
+  .player-zone.active {
+    background: var(--bg);
+    border-color: var(--accent);
+    box-shadow: inset 0 0 40px rgba(74, 158, 255, 0.1);
+  }
+
+  .player-zone.active .time-display {
+    transform: scale(1.15);
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .player-zone:not(.active) .time-display {
+    transform: scale(0.85);
+    opacity: 0.5;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+  }
+
+  .player-zone.warning {
+    background: rgba(255, 107, 53, 0.05);
+    border-color: var(--warning);
+  }
+
+  .time-display {
+    font-size: 15vw;
+    font-weight: 300;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+
+  .player-label {
+    position: absolute;
+    top: 1.5rem;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-secondary);
+    font-weight: 600;
+  }
+
+  .player-zone.left .player-label {
+    left: 1.5rem;
+  }
+
+  .player-zone.right .player-label {
+    right: 1.5rem;
+  }
+
+  /* --- Compteur de coups --- */
+  .move-counter {
+    position: fixed;
+    top: 1.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(26, 26, 26, 0.95);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 0.5rem 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.2rem;
+    z-index: 50;
+  }
+
+  .move-counter-label {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+  }
+
+  .move-counter-value {
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* --- Contrôles flottants --- */
+  .controls {
+    position: fixed;
+    bottom: 1.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 0.75rem;
+    background: rgba(26, 26, 26, 0.95);
+    backdrop-filter: blur(20px);
+    padding: 0.75rem 1.25rem;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    z-index: 100;
+  }
+
+  .control-btn {
+    background: transparent;
+    border: 1.5px solid var(--border);
+    color: var(--text-primary);
+    padding: 0.6rem 1.2rem;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+  }
+
+  .control-btn:active {
+    transform: scale(0.94);
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+
+  .control-btn.primary {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+
+  /* Notification de temps écoulé */
+  .timeout-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+  }
+
+  .timeout-overlay.show {
+    display: flex;
+  }
+
+  .timeout-message {
+    background: var(--surface);
+    padding: 2rem;
+    border-radius: 20px;
+    text-align: center;
+    border: 2px solid var(--warning);
+  }
+
+  .timeout-message h2 {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+    color: var(--warning);
+  }
+
+  .timeout-message p {
+    color: var(--text-secondary);
+    margin-bottom: 1.5rem;
+  }
+
+  .debug-info {
+    position: fixed;
+    bottom: 5rem;
+    right: 1rem;
+    background: rgba(26, 26, 26, 0.9);
+    padding: 0.5rem;
+    border-radius: 8px;
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    z-index: 200;
+    font-family: monospace;
+  }
+</style>
+</head>
+<body>
+
+<!-- Menu -->
+<div id="menu" class="menu">
+  <div class="menu-header">
+    <h1>♞ TempoChess</h1>
+    <div class="by">by Ranto</div>
+    <p>Choisissez votre cadence</p>
+  </div>
+
+  <div class="time-options">
+    <div class="time-option" data-min="3" data-inc="2">3 + 2</div>
+    <div class="time-option" data-min="3" data-inc="0">3 + 0</div>
+    <div class="time-option" data-min="5" data-inc="0">5 + 0</div>
+    <div class="time-option" data-min="5" data-inc="5">5 + 5</div>
+    <div class="time-option" data-min="10" data-inc="0">10 + 0</div>
+    <div class="time-option" id="customBtn">Personnalisé</div>
+  </div>
+
+  <div class="custom-section hidden" id="customSection">
+    <div class="input-group">
+      <div class="input-row">
+        <label>Temps (min)</label>
+        <input id="customTime" type="number" min="1" max="99" value="5">
+      </div>
+      <div class="input-row">
+        <label>Incrément (sec)</label>
+        <input id="customInc" type="number" min="0" max="60" value="2">
+      </div>
+    </div>
+    <button class="btn-primary" id="startCustom">Démarrer</button>
+  </div>
+</div>
+
+<!-- Écran de rotation -->
+<div id="rotationScreen" class="rotation-screen hidden">
+  <h2>Tournez votre téléphone<br>en mode paysage</h2>
+  
+  <svg class="rotation-icon" viewBox="0 0 240 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <g class="phone-animated">
+      <rect x="95" y="40" width="50" height="80" rx="6" stroke="#4a9eff" stroke-width="3" fill="#1a1a1a"/>
+      <circle cx="120" cy="113" r="4" fill="#4a9eff"/>
+      <rect x="102" y="54" width="36" height="52" rx="2" fill="#4a9eff" opacity="0.3"/>
+    </g>
+  </svg>
+  
+  <button class="skip-rotation" id="skipRotation">Passer</button>
+</div>
+
+<!-- Jeu -->
+<div id="game" class="game hidden">
+  <div class="move-counter">
+    <div class="move-counter-label">Coups</div>
+    <div class="move-counter-value" id="moveCount">0</div>
+  </div>
+
+  <div class="player-zone left" id="leftZone">
+    <div class="player-label">Gauche</div>
+    <div class="time-display" id="timeLeft">05:00</div>
+  </div>
+
+  <div class="player-zone right" id="rightZone">
+    <div class="player-label">Droit</div>
+    <div class="time-display" id="timeRight">05:00</div>
+  </div>
+
+  <div class="controls">
+    <button class="control-btn primary" id="startBtn">Start</button>
+    <button class="control-btn" id="pauseBtn">Pause</button>
+    <button class="control-btn" id="resetBtn">Reset</button>
+    <button class="control-btn" id="homeBtn">Menu</button>
+  </div>
+</div>
+
+<!-- Overlay temps écoulé -->
+<div class="timeout-overlay" id="timeoutOverlay">
+  <div class="timeout-message">
+    <h2>⏰ Temps écoulé !</h2>
+    <p id="timeoutPlayer"></p>
+    <button class="btn-primary" id="timeoutOk">OK</button>
+  </div>
+</div>
+
+<script>
+// État du jeu
+let baseTime = 5 * 60 * 1000;
+let increment = 2000;
+let leftMs = baseTime;
+let rightMs = baseTime;
+let active = null;
+let running = false;
+let lastTick = null;
+let moveCount = 0;
+let halfMoves = 0;
+
+// Wake Lock
+let wakeLock = null;
+
+// Variables pour le gyroscope
+let lastSwitchTime = 0;
+const SWITCH_COOLDOWN = 500; // ms pour éviter les changements trop rapides
+
+// Éléments DOM
+const menu = document.getElementById('menu');
+const rotationScreen = document.getElementById('rotationScreen');
+const game = document.getElementById('game');
+const leftZone = document.getElementById('leftZone');
+const rightZone = document.getElementById('rightZone');
+const timeLeft = document.getElementById('timeLeft');
+const timeRight = document.getElementById('timeRight');
+const moveCountEl = document.getElementById('moveCount');
+const timeoutOverlay = document.getElementById('timeoutOverlay');
+const timeoutPlayer = document.getElementById('timeoutPlayer');
+
+// Fonction pour activer le mode plein écran
+async function requestFullscreen() {
+  const elem = document.documentElement;
+  try {
+    if (elem.requestFullscreen) {
+      await elem.requestFullscreen();
+    } else if (elem.webkitRequestFullscreen) {
+      await elem.webkitRequestFullscreen();
+    } else if (elem.mozRequestFullScreen) {
+      await elem.mozRequestFullScreen();
+    } else if (elem.msRequestFullscreen) {
+      await elem.msRequestFullscreen();
+    }
+    console.log('Mode plein écran activé');
+  } catch (err) {
+    console.log('Erreur mode plein écran:', err);
+  }
+}
+
+// Fonction pour activer le Wake Lock
+async function requestWakeLock() {
+  if ('wakeLock' in navigator) {
+    try {
+      wakeLock = await navigator.wakeLock.request('screen');
+      console.log('Wake Lock activé');
+      
+      wakeLock.addEventListener('release', () => {
+        console.log('Wake Lock libéré');
+      });
+    } catch (err) {
+      console.error('Erreur Wake Lock:', err);
+    }
+  }
+}
+
+// Fonction pour libérer le Wake Lock
+async function releaseWakeLock() {
+  if (wakeLock !== null) {
+    try {
+      await wakeLock.release();
+      wakeLock = null;
+      console.log('Wake Lock désactivé');
+    } catch (err) {
+      console.error('Erreur libération Wake Lock:', err);
+    }
+  }
+}
+
+// Réactiver le Wake Lock quand la page redevient visible
+document.addEventListener('visibilitychange', async () => {
+  if (document.visibilityState === 'visible' && running) {
+    await requestWakeLock();
+  }
+});
+
+// Formatage du temps
+const fmt = ms => {
+  if (ms < 0) ms = 0;
+  const totalSec = Math.floor(ms / 1000);
+  const min = Math.floor(totalSec / 60);
+  const sec = totalSec % 60;
+  return `${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+};
+
+// Mise à jour de l'affichage
+function updateDisplay() {
+  timeLeft.textContent = fmt(leftMs);
+  timeRight.textContent = fmt(rightMs);
+  
+  leftZone.classList.toggle('active', active === 'left');
+  rightZone.classList.toggle('active', active === 'right');
+  
+  leftZone.classList.toggle('warning', leftMs < 10000 && leftMs > 0);
+  rightZone.classList.toggle('warning', rightMs < 10000 && rightMs > 0);
+}
+
+// Changement de tour
+function switchTurn(newActive) {
+  if (!running || active === newActive) return;
+  
+  const now = Date.now();
+  if (now - lastSwitchTime < SWITCH_COOLDOWN) return;
+  lastSwitchTime = now;
+  
+  if (active) {
+    if (active === 'left') leftMs += increment;
+    else rightMs += increment;
+    
+    halfMoves++;
+    moveCount = Math.floor(halfMoves / 2);
+    moveCountEl.textContent = moveCount;
+  }
+  
+  active = newActive;
+  lastTick = performance.now();
+  updateDisplay();
+}
+
+// Boucle de temps
+function tick(now) {
+  if (!lastTick) lastTick = now;
+  const dt = now - lastTick;
+  lastTick = now;
+  
+  if (running && active) {
+    if (active === 'left') {
+      leftMs -= dt;
+      if (leftMs <= 0) {
+        leftMs = 0;
+        running = false;
+        showTimeout('Gauche');
+      }
+    } else {
+      rightMs -= dt;
+      if (rightMs <= 0) {
+        rightMs = 0;
+        running = false;
+        showTimeout('Droit');
+      }
+    }
+    updateDisplay();
+  }
+  
+  requestAnimationFrame(tick);
+}
+
+function showTimeout(player) {
+  timeoutPlayer.textContent = `Le joueur ${player} a perdu au temps`;
+  timeoutOverlay.classList.add('show');
+  releaseWakeLock();
+}
+
+document.getElementById('timeoutOk').addEventListener('click', () => {
+  timeoutOverlay.classList.remove('show');
+});
+
+// Contrôles
+document.getElementById('startBtn').addEventListener('click', async () => {
+  if (!running) {
+    running = true;
+    if (!active) active = 'left';
+    lastTick = performance.now();
+    updateDisplay();
+    await requestWakeLock();
+    await requestFullscreen();
+  }
+});
+
+document.getElementById('pauseBtn').addEventListener('click', () => {
+  running = false;
+  updateDisplay();
+  releaseWakeLock();
+});
+
+document.getElementById('resetBtn').addEventListener('click', () => {
+  running = false;
+  active = null;
+  leftMs = rightMs = baseTime;
+  moveCount = 0;
+  halfMoves = 0;
+  moveCountEl.textContent = '0';
+  updateDisplay();
+  releaseWakeLock();
+});
+
+document.getElementById('homeBtn').addEventListener('click', () => {
+  game.classList.add('hidden');
+  menu.classList.remove('hidden');
+  running = false;
+  active = null;
+  document.getElementById('customSection').classList.add('hidden');
+  releaseWakeLock();
+});
+
+// Zones cliquables
+leftZone.addEventListener('click', () => {
+  if (running && active === 'left') {
+    switchTurn('right');
+  }
+});
+
+rightZone.addEventListener('click', () => {
+  if (running && active === 'right') {
+    switchTurn('left');
+  }
+});
+
+// Menu - Options de temps
+document.querySelectorAll('.time-option:not(#customBtn)').forEach(opt => {
+  opt.addEventListener('click', () => {
+    baseTime = parseInt(opt.dataset.min) * 60 * 1000;
+    increment = parseInt(opt.dataset.inc) * 1000;
+    showRotationScreen();
+  });
+});
+
+document.getElementById('customBtn').addEventListener('click', () => {
+  document.getElementById('customSection').classList.toggle('hidden');
+});
+
+document.getElementById('startCustom').addEventListener('click', () => {
+  const t = parseInt(document.getElementById('customTime').value);
+  const inc = parseInt(document.getElementById('customInc').value);
+  baseTime = t * 60 * 1000;
+  increment = inc * 1000;
+  showRotationScreen();
+});
+
+function showRotationScreen() {
+  menu.classList.add('hidden');
+  rotationScreen.classList.remove('hidden');
+}
+
+document.getElementById('skipRotation').addEventListener('click', () => {
+  startGame();
+});
+
+function startGame() {
+  leftMs = rightMs = baseTime;
+  active = null;
+  running = false;
+  moveCount = 0;
+  halfMoves = 0;
+  moveCountEl.textContent = '0';
+  rotationScreen.classList.add('hidden');
+  game.classList.remove('hidden');
+  updateDisplay();
+}
+
+// Gestion du gyroscope améliorée pour Android et iOS
+function handleOrientation(e) {
+  if (!running) return;
+  
+  const beta = e.beta;   // Inclinaison avant/arrière (-180 à 180)
+  const gamma = e.gamma; // Inclinaison gauche/droite (-90 à 90)
+  
+  // Détecter l'orientation de l'écran
+  const screenOrientation = window.screen?.orientation?.angle || window.orientation || 0;
+  
+  // Seuil d'inclinaison pour changer de joueur
+  const TILT_THRESHOLD = 1;
+  
+  // Logique unifiée pour Android et iOS
+  // On utilise l'angle de l'écran pour déterminer comment interpréter les valeurs
+  
+  if (screenOrientation === 90 || screenOrientation === -270) {
+    // Paysage normal (rotation droite)
+    // Quand le téléphone bascule vers la droite (beta > 0), on active le joueur de droite
+    // Quand le téléphone bascule vers la gauche (beta < 0), on active le joueur de gauche
+    if (beta > TILT_THRESHOLD && active === 'right') {
+      switchTurn('left');
+    } else if (beta < -TILT_THRESHOLD && active === 'left') {
+      switchTurn('right');
+    }
+  } else if (screenOrientation === -90 || screenOrientation === 270) {
+    // Paysage inversé (rotation gauche)
+    if (beta > TILT_THRESHOLD && active === 'left') {
+      switchTurn('right');
+    } else if (beta < -TILT_THRESHOLD && active === 'right') {
+      switchTurn('left');
+    }
+  } else {
+    // Fallback : utiliser gamma si on est en portrait ou orientation inconnue
+    if (Math.abs(gamma) > TILT_THRESHOLD) {
+      if (gamma < 0 && active === 'left') {
+        switchTurn('right');
+      } else if (gamma > 0 && active === 'right') {
+        switchTurn('left');
+      }
+    }
+  }
+}
+
+// Demander la permission sur iOS 13+
+if (typeof DeviceOrientationEvent !== "undefined" && 
+    typeof DeviceOrientationEvent.requestPermission === "function") {
+  
+  const requestBtn = document.createElement('button');
+  requestBtn.textContent = 'Activer gyroscope';
+  requestBtn.className = 'btn-primary';
+  requestBtn.style.marginTop = '1rem';
+  requestBtn.style.maxWidth = '400px';
+  
+  document.querySelector('.menu').appendChild(requestBtn);
+  
+  requestBtn.addEventListener('click', async () => {
+    try {
+      const res = await DeviceOrientationEvent.requestPermission();
+      if (res === "granted") {
+        window.addEventListener("deviceorientation", handleOrientation);
+        requestBtn.remove();
+      }
+    } catch (err) {
+      console.error("Permission refusée", err);
+    }
+  });
+} else if (window.DeviceOrientationEvent) {
+  // Android et autres navigateurs
+  window.addEventListener("deviceorientation", handleOrientation);
+}
+
+// Démarrer la boucle
+requestAnimationFrame(tick);
+updateDisplay();
+</script>
+</body>
+</html>
